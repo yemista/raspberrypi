@@ -1,4 +1,5 @@
-import "LCD_driver"
+package main
+
 
 func main() {
   SetCursorBlink()

@@ -21,18 +21,18 @@
 # THE SOFTWARE.
 */
 
+package main
+
 import (
 	"fmt"
 	"github.com/stianeikeland/go-rpio"
 	"os"
-	"strings"
 )
 
 // Commands
 const LCD_CLEARDISPLAY        = 0x01
 const LCD_RETURNHOME          = 0x02
 const LCD_ENTRYMODESET        = 0x04
-const LCD_DISPLAYCONTROL      = 0x08
 const LCD_CURSORSHIFT         = 0x10
 const LCD_DISPLAYCONTROL      = 0x08
 const LCD_SETCGRAMADDR        = 0x40
@@ -66,8 +66,6 @@ const LCD_1LINE               = 0x00
 const LCD_5x10DOTS            = 0x04
 const LCD_5x8DOTS             = 0x00
 
-// Offset for up to 4 rows.
-const LCD_ROW_OFFSETS         = (0x00, 0x40, 0x14, 0x54)
 
 // Char LCD plate button names.
 const SELECT                  = 0
@@ -77,12 +75,12 @@ const UP                      = 3
 const LEFT                    = 4
 
 // Char LCD backpack GPIO numbers.
-const LCD_RS         = 1
-const LCD_EN         = 2
-const LCD_D4         = 3
-const LCD_D5         = 4
-const LCD_D6         = 5
-const LCD_D7         = 6
+const LCD_RS         = 16
+const LCD_EN         = 20
+const LCD_D4         = 6
+const LCD_D5         = 13
+const LCD_D6         = 19
+const LCD_D7         = 26
 
 type char uint8
 
@@ -94,11 +92,11 @@ var (
 	D2_PIN = rpio.Pin(LCD_D6)
 	D3_PIN = rpio.Pin(LCD_D7)
 
-	data_pins := [4]Pin{
+	data_pins = [4]rpio.Pin{
 		D0_PIN,
 		D1_PIN,
 		D2_PIN,
-		D3_PIN
+		D3_PIN,
 	}
 )
 
@@ -106,7 +104,7 @@ func init() {
 	RS_PIN.Output()
 	CLOCK_PIN.Output()
 
-	for i, v := range data_pins {
+	for _, v := range data_pins {
 		v.Output()
 	}
 }
@@ -118,26 +116,27 @@ func clockPulse() {
 }
 
 func printC(in char) {
+	data := uint(in)	
 
-	for i, v := range data_pins {
-		val := ((in >> i + 4) & 1) > 0
+	for i, _ := range data_pins {
+		val := ((data >> uint(i) + 4) & 1) > 0
 
 		if val {
-			db_pins[i].High()
+			data_pins[i].High()
 		} else {
-			db_pins[i].Low()
+			data_pins[i].Low()
 		}
 	}
 
 	clockPulse()
 
-	for i, v := range data_pins {
-		val := ((in >> i) & 1) > 0
+	for i, _ := range data_pins {
+		val := ((data >> uint(i)) & 1) > 0
 
 		if val {
-			db_pins[i].High()
+			data_pins[i].High()
 		} else {
-			db_pins[i].Low()
+			data_pins[i].Low()
 		}
 	}
 
@@ -156,7 +155,7 @@ func setCmdMode() {
 func SetCursorBlink() {
 	setCmdMode()
 	val := LCD_DISPLAYCONTROL | LCD_DISPLAYON | LCD_CURSORON
-	printC(val)
+	printC(char(val))
 }
 
 func Write(in string)  {
