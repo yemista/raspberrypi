@@ -1,6 +1,6 @@
 obj-m += helloworld.o
 
-KERNEL_DIR ?= /home/elias/embedded-raspian/linux-modules/lib/modules/4.9.80-v7+/build
+KERNEL_DIR ?= /home/elias/raspian/modules/lib/modules/4.9.80-v7+/build
 
 all:
 	make -C $(KERNEL_DIR) M=$(shell pwd) \
